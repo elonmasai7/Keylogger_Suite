@@ -67,18 +67,7 @@ The Keylogger Suite is a comprehensive system monitoring solution designed for a
    Install.bat
    ```
 
-## Technical Architecture
 
-```mermaid
-graph LR
-    A[Keylogger] -->|Raw keystrokes| B[Record.log]
-    C[Controller] -->|Daily trigger| D[Log Decoder]
-    D -->|Processed data| E[Data.log]
-    E --> F[PDF Generator]
-    F -->|Formatted report| G([COMPUTERNAME]_Report.pdf])
-    G --> H[Email Sender]
-    H -->|Encrypted delivery| I[elonmasai02@proton.me]
-```
 
 ## Usage
 
